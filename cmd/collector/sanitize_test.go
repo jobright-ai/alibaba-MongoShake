@@ -212,3 +212,20 @@ func TestCheckIneffectiveOptionsBarrierOrdering(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckConflictAllowsCombinedNamespaceFilters(t *testing.T) {
+	origin := conf.Options
+	defer func() {
+		conf.Options = origin
+	}()
+
+	conf.Options = conf.Configuration{
+		MongoUrls:            []string{"mongodb://source-a"},
+		SyncMode:             utils.VarSyncModeIncr,
+		Tunnel:               utils.VarTunnelMock,
+		FilterNamespaceWhite: []string{"serving", "ats", "indeed", "ups"},
+		FilterNamespaceBlack: []string{"serving.gpt_result_dump"},
+	}
+
+	assert.NoError(t, checkConflict())
+}

@@ -117,7 +117,8 @@ func (filter *NamespaceFilter) FilterNs(namespace string) bool {
 	return filter.filterNsByRules(namespace)
 }
 
-// filterNsByRules checks namespace against white/black list regex rules.
+// filterNsByRules applies the whitelist first, then excludes any namespace
+// matched by the blacklist, even if it was allowed by the whitelist.
 func (filter *NamespaceFilter) filterNsByRules(namespace string) bool {
 	if filter.whiteRule != "" {
 		if match, _ := regexp.MatchString(filter.whiteRule, namespace); !match {
