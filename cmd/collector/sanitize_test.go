@@ -174,3 +174,20 @@ func TestCheckConflictRejectPrometheusSystemProfilePortConflict(t *testing.T) {
 	err := checkConflict()
 	assert.EqualError(t, err, "system_profile_port should not equal to prom.http_port")
 }
+
+func TestCheckConflictAllowsCombinedNamespaceFilters(t *testing.T) {
+	origin := conf.Options
+	defer func() {
+		conf.Options = origin
+	}()
+
+	conf.Options = conf.Configuration{
+		MongoUrls:            []string{"mongodb://source-a"},
+		SyncMode:             utils.VarSyncModeIncr,
+		Tunnel:               utils.VarTunnelMock,
+		FilterNamespaceWhite: []string{"serving", "ats", "indeed", "ups"},
+		FilterNamespaceBlack: []string{"serving.gpt_result_dump"},
+	}
+
+	assert.NoError(t, checkConflict())
+}
