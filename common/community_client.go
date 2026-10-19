@@ -312,23 +312,14 @@ func EncodeMongoURI(uri string) (string, error) {
 		return "", fmt.Errorf("missing username or password in username:password")
 	}
 
-	// split hosts and path
-	hostPathParts := strings.SplitN(afterUserInfo, "/", 2)
-	host := hostPathParts[0]
-	var path string
-	if len(hostPathParts) > 1 {
-		path = "/" + hostPathParts[1]
-	} else {
-		path = ""
+	// Parse the host/path/query separately from raw credentials. Putting the
+	// complete suffix in Path escapes '?' and silently turns options such as
+	// authSource into part of the database name.
+	u, err := url.Parse(scheme + "://" + afterUserInfo)
+	if err != nil {
+		return "", fmt.Errorf("invalid MongoDB host/path/query: %w", err)
 	}
-
-	// generate URL
-	u := &url.URL{
-		Scheme: scheme,
-		User:   url.UserPassword(username, password),
-		Host:   host,
-		Path:   path,
-	}
+	u.User = url.UserPassword(username, password)
 
 	return u.String(), nil
 }

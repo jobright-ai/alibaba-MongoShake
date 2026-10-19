@@ -467,7 +467,11 @@ func checkConnection() error {
 
 			// set target version
 			if i == 0 {
-				conf.Options.TargetDBVersion, _ = utils.GetDBVersion(targetConn)
+				conf.Options.TargetDBVersion, err = utils.GetDBVersion(targetConn)
+				if err != nil {
+					return fmt.Errorf("get target mongodb[%v] version failed: %w",
+						utils.BlockMongoUrlPassword(mongo, "***"), err)
+				}
 			}
 		}
 	}
@@ -478,10 +482,17 @@ func checkConnection() error {
 		return err
 	}
 
-	sourceConn, _ := utils.NewMongoCommunityConn(source, utils.VarMongoConnectModeSecondaryPreferred, true,
+	sourceConn, err := utils.NewMongoCommunityConn(source, utils.VarMongoConnectModeSecondaryPreferred, true,
 		utils.ReadWriteConcernDefault, utils.ReadWriteConcernDefault, conf.Options.MongoSslRootCaFile)
-	// ignore error
-	conf.Options.SourceDBVersion, _ = utils.GetDBVersion(sourceConn)
+	if err != nil {
+		return fmt.Errorf("connect source mongodb[%v] for version check failed: %w",
+			utils.BlockMongoUrlPassword(source, "***"), err)
+	}
+	conf.Options.SourceDBVersion, err = utils.GetDBVersion(sourceConn)
+	if err != nil {
+		return fmt.Errorf("get source mongodb[%v] version failed: %w",
+			utils.BlockMongoUrlPassword(source, "***"), err)
+	}
 	if ok, err := utils.GetAndCompareVersion(sourceConn, utils.VarMongoVersion26,
 		conf.Options.SourceDBVersion); err != nil {
 		return err

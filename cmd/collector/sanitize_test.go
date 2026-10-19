@@ -229,3 +229,18 @@ func TestCheckConflictAllowsCombinedNamespaceFilters(t *testing.T) {
 
 	assert.NoError(t, checkConflict())
 }
+
+func TestCheckConnectionReturnsSourceVersionConnectionError(t *testing.T) {
+	origin := conf.Options
+	defer func() { conf.Options = origin }()
+	conf.Options = conf.Configuration{
+		MongoSUrl: "invalid://user:secret@host/",
+	}
+
+	err := checkConnection()
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "connect source mongodb")
+		assert.Contains(t, err.Error(), "unsupported scheme")
+		assert.NotContains(t, err.Error(), "secret")
+	}
+}
