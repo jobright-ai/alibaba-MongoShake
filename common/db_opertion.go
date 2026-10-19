@@ -48,6 +48,9 @@ func (ms *MongoSource) String() string {
 
 // GetDBVersion return string of db version with format like "3.0.1"
 func GetDBVersion(conn *MongoCommunityConn) (string, error) {
+	if conn == nil || conn.Client == nil {
+		return "", fmt.Errorf("MongoDB connection is not initialized")
+	}
 
 	res, err := conn.Client.Database("admin").
 		RunCommand(conn.ctx, bson.D{{"buildInfo", 1}}).DecodeBytes()
